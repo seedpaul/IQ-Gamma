@@ -1,5 +1,5 @@
 import { fisher2pl, fisher3pl } from "./irt.js";
-import { shuffleInPlace } from "./utils.js";
+import { clamp } from "./utils.js";
 
 export class CatSubtest{
   constructor({
@@ -9,7 +9,10 @@ export class CatSubtest{
     exposureStore,
     config,
     allowedItemIds = null,
-    excludedItemIds = null
+    excludedItemIds = null,
+    anchorItemIds = [],
+    anchorPolicy = {},
+    anchorMiniBlockN = 0
   }){
     this.domain = domain;
     this.items = items;
@@ -31,16 +34,24 @@ export class CatSubtest{
     this.anchorAdministered = 0;
 
     this.familyCounts = {};
+
+    this.anchorSet = new Set(anchorItemIds ?? []);
+    this.anchorPolicy = anchorPolicy ?? {};
+    this.anchorMiniBlockN = Math.max(0, anchorMiniBlockN ?? 0);
+    this.anchorMiniRemaining = this.anchorMiniBlockN;
+    this.adminAnchors = 0;
   }
 
-  
+ 
   setFormContext({ formId, anchorTarget } = {}){
     this.formId = formId ?? null;
     this.anchorTarget = (typeof anchorTarget === "number") ? anchorTarget : null;
     this.anchorAdministered = 0;
+    this.adminAnchors = 0;
+    this.anchorMiniRemaining = this.anchorMiniBlockN;
   }
 
-start(){
+  start(){
     this.startedAt = performance.now();
 
     // Apply form / exclusion filtering
@@ -54,11 +65,20 @@ start(){
     this.items = pool;
     this.theta = 0;
     this.sem = 999;
+    this.responses = [];
+    this.administered = new Set();
+    this.familyCounts = {};
+    this.anchorMiniRemaining = this.anchorMiniBlockN;
+    this.adminAnchors = 0;
   }
 
   recordResponse({ item, x, rtMs, meta={} }){
     this.responses.push({ item, x, rtMs, meta });
     this.administered.add(item.id);
+
+    if (this.anchorSet.has(item.id)){
+      this.adminAnchors += 1;
+    }
 
     this.familyCounts[item.family] = (this.familyCounts[item.family] ?? 0) + 1;
 
@@ -130,7 +150,6 @@ start(){
     const maxAnchors = this.anchorPolicy?.maxAnchors ?? 6;
     const avoidFirstTwo = !!this.anchorPolicy?.avoidFirstTwo;
 
-    const minTotalForAnchors = 6; // don't force anchors too early if avoidFirstTwo
     const desiredAnchorsNow = Math.round((n + 1) * targetProp);
 
     let forceAnchor = false;
@@ -207,4 +226,12 @@ start(){
       }))
     };
   }
+
+  isAnchor(itemId){
+    return this.anchorSet.has(itemId);
+  }
+}
+
+function clamp01(x){
+  return clamp(typeof x === "number" ? x : 0, 0, 1);
 }

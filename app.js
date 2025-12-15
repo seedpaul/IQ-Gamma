@@ -1,3 +1,4 @@
+
 import { EapEstimator } from "./js/engine/eap.js";
 import { CatSubtest } from "./js/engine/cat.js";
 import { ExposureStore } from "./js/engine/exposure.js";
@@ -27,24 +28,23 @@ const deviceCheckResult = document.getElementById("deviceCheckResult");
 
 const btnStart = document.getElementById("btnStart");
 const btnPractice = document.getElementById("btnPractice");
-
-const practiceArea = document.getElementById("practiceArea");
 const btnPracticeBack = document.getElementById("btnPracticeBack");
 const btnPracticeDone = document.getElementById("btnPracticeDone");
+const practiceArea = document.getElementById("practiceArea");
+
+const btnQuit = document.getElementById("btnQuit");
+const btnSubmit = document.getElementById("btnSubmit");
+const btnRestart = document.getElementById("btnRestart");
+const btnExport = document.getElementById("btnExport");
 
 const kickerDomain = document.getElementById("kickerDomain");
 const testTitle = document.getElementById("testTitle");
 const itemArea = document.getElementById("itemArea");
-const btnQuit = document.getElementById("btnQuit");
-const btnSubmit = document.getElementById("btnSubmit");
 const itemCount = document.getElementById("itemCount");
 const semReadout = document.getElementById("semReadout");
 const timeReadout = document.getElementById("timeReadout");
 const integrityNote = document.getElementById("integrityNote");
-
 const reportArea = document.getElementById("reportArea");
-const btnRestart = document.getElementById("btnRestart");
-const btnExport = document.getElementById("btnExport");
 
 const btnFullscreen = document.getElementById("btnFullscreen");
 const btnExportSessions = document.getElementById("btnExportSessions");
@@ -55,126 +55,73 @@ const btnExportIrtPackage = document.getElementById("btnExportIrtPackage");
 const consentCheck = document.getElementById("consentCheck");
 const sessionInfo = document.getElementById("sessionInfo");
 
+const participantIdInput = document.getElementById("participantId");
+const groupAInput = document.getElementById("groupA");
+const groupBInput = document.getElementById("groupB");
+const groupCInput = document.getElementById("groupC");
 
 const estimator = new EapEstimator({ gridMin: -4, gridMax: 4, step: 0.1 });
 const exposure = new ExposureStore();
 const sessions = new SessionStore();
-
-// Item exclusion store (local, for DIF screening workflows)
 const exclusions = new ItemExclusionStore();
 
 let activeSessionId = null;
-
-let itembank = null;
 let controller = null;
-let _itembankRef = null;
-let _formsMetaRef = null;
-
-
-function getSelectedMode(){
-  const el = document.querySelector('input[name="mode"]:checked');
-  return el ? el.value : "standard";
-}
-
-function updateSessionInfo(){
-  const recent = sessions.list({ limit: 1 })[0];
-  if (!recent){
-    sessionInfo.textContent = "No saved sessions in this browser.";
-    return;
-  }
-  sessionInfo.textContent = `Last session: ${recent.id} • ${recent.completed ? "completed" : "incomplete"} • ${recent.createdAt}`;
-}
-
+let itembank = null;
+let formsMeta = null;
 
 boot();
 
 async function boot(){
-  setStatus("Loading…");
+  setStatus("Loading...");
 
-  itembank = await fetch("./js/data/itembank.json").then(r => r.json());
+  const [ib, fm] = await Promise.all([
+    fetch("./js/data/itembank.json").then(r => r.json()),
+    fetch("./js/data/forms.json").then(r => r.json()).catch(() => null)
+  ]);
+  itembank = ib;
+  formsMeta = fm;
 
   setStatus("Ready");
 
+  wireUi();
+  updateSessionInfo();
+  showWelcome();
+}
+
+function wireUi(){
   btnDeviceCheck.addEventListener("click", runTimingCheck);
-  btnPractice.addEventListener("click", () => showPractice());
-  btnStart.addEventListener("click", () => startAssessment());
+  btnPractice.addEventListener("click", showPractice);
+  btnPracticeBack.addEventListener("click", showWelcome);
+  btnPracticeDone.addEventListener("click", showWelcome);
 
-  btnPracticeBack.addEventListener("click", () => showWelcome());
-  btnPracticeDone.addEventListener("click", () => showWelcome());
-
+  btnStart.addEventListener("click", startAssessment);
   btnQuit.addEventListener("click", () => {
     controller?.abort("User quit");
-  
-  btnFullscreen.addEventListener("click", async () => {
-    try{ await document.documentElement.requestFullscreen?.(); }catch{}
+    showWelcome();
   });
-
-  btnExportSessions.addEventListener("click", () => {
-    const all = sessions.exportAll();
-    downloadJson("chc-cat-sessions.json", all);
-  });
-
-  btnExportLongCsv.addEventListener("click", () => {
-    const all = sessions.exportAll();
-    exportLongCsv({ sessionsState: all, filename: "chc-cat-long.csv" });
-  });
-
-  btnExportIrtPackage.addEventListener("click", () => {
-    const all = sessions.exportAll();
-    const pkg = buildIrtPackage({ sessionsState: all, itembank: _itembankRef, formsMeta: _formsMetaRef });
-    // sequential downloads
-    for (const f of pkg.files){
-      const blob = new Blob([f.content], { type: f.mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = f.name;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    }
-  });
-
-  btnDifExplorer.addEventListener("click", () => {
-    showScreen("report");
-    setStatus("DIF explorer");
-    renderDifExplorer();
-  });
-
-  btnClearSessions.addEventListener("click", () => {
-    sessions.clear();
-    exclusions.clear?.();
-    updateSessionInfo();
-  });
-
-  updateSessionInfo();
-
-
-  showWelcome();
-  });
-
   btnSubmit.addEventListener("click", () => controller?.submit());
-
   btnRestart.addEventListener("click", () => {
+    controller?.abort("Restart");
     controller = null;
-  
+    showWelcome();
+  });
+  btnExport.addEventListener("click", exportReportAndSession);
+
   btnFullscreen.addEventListener("click", async () => {
     try{ await document.documentElement.requestFullscreen?.(); }catch{}
   });
-
   btnExportSessions.addEventListener("click", () => {
     const all = sessions.exportAll();
     downloadJson("chc-cat-sessions.json", all);
   });
-
   btnExportLongCsv.addEventListener("click", () => {
     const all = sessions.exportAll();
     exportLongCsv({ sessionsState: all, filename: "chc-cat-long.csv" });
   });
-
   btnExportIrtPackage.addEventListener("click", () => {
     const all = sessions.exportAll();
-    const pkg = buildIrtPackage({ sessionsState: all, itembank: _itembankRef, formsMeta: _formsMetaRef });
-    // sequential downloads
+    const pkg = buildIrtPackage({ sessionsState: all, itembank, formsMeta });
     for (const f of pkg.files){
       const blob = new Blob([f.content], { type: f.mime });
       const url = URL.createObjectURL(blob);
@@ -185,80 +132,16 @@ async function boot(){
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     }
   });
-
   btnDifExplorer.addEventListener("click", () => {
     showScreen("report");
     setStatus("DIF explorer");
     renderDifExplorer();
   });
-
   btnClearSessions.addEventListener("click", () => {
     sessions.clear();
     exclusions.clear?.();
     updateSessionInfo();
   });
-
-  updateSessionInfo();
-
-
-  showWelcome();
-  });
-
-  btnExport.addEventListener("click", () => {
-    if (!controller?.finalReport) return;
-    safeJsonDownload("chc-cat-report.json", controller.finalReport);
-    if (activeSessionId){
-      const s = sessions.exportSession(activeSessionId);
-      safeJsonDownload(`chc-cat-session-${activeSessionId}.json`, s);
-    }
-  });
-
-
-  btnFullscreen.addEventListener("click", async () => {
-    try{ await document.documentElement.requestFullscreen?.(); }catch{}
-  });
-
-  btnExportSessions.addEventListener("click", () => {
-    const all = sessions.exportAll();
-    downloadJson("chc-cat-sessions.json", all);
-  });
-
-  btnExportLongCsv.addEventListener("click", () => {
-    const all = sessions.exportAll();
-    exportLongCsv({ sessionsState: all, filename: "chc-cat-long.csv" });
-  });
-
-  btnExportIrtPackage.addEventListener("click", () => {
-    const all = sessions.exportAll();
-    const pkg = buildIrtPackage({ sessionsState: all, itembank: _itembankRef, formsMeta: _formsMetaRef });
-    // sequential downloads
-    for (const f of pkg.files){
-      const blob = new Blob([f.content], { type: f.mime });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = f.name;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    }
-  });
-
-  btnDifExplorer.addEventListener("click", () => {
-    showScreen("report");
-    setStatus("DIF explorer");
-    renderDifExplorer();
-  });
-
-  btnClearSessions.addEventListener("click", () => {
-    sessions.clear();
-    exclusions.clear?.();
-    updateSessionInfo();
-  });
-
-  updateSessionInfo();
-
-
-  showWelcome();
 }
 
 function setStatus(text){
@@ -266,8 +149,8 @@ function setStatus(text){
 }
 
 function showScreen(name){
-  for (const s of Object.values(screens)) s.classList.add("hidden");
-  screens[name].classList.remove("hidden");
+  Object.values(screens).forEach(s => s.classList.add("hidden"));
+  screens[name]?.classList.remove("hidden");
 }
 
 function showWelcome(){
@@ -279,6 +162,15 @@ function showPractice(){
   showScreen("practice");
   setStatus("Practice");
   renderPractice();
+}
+
+function updateSessionInfo(){
+  const recent = sessions.list({ limit: 1 })[0];
+  if (!recent){
+    sessionInfo.textContent = "No saved sessions in this browser.";
+    return;
+  }
+  sessionInfo.textContent = `Last session: ${recent.id} ? ${recent.completed ? "completed" : "incomplete"} ? ${recent.createdAt}`;
 }
 
 function renderPractice(){
@@ -352,10 +244,9 @@ function renderPractice(){
 }
 
 async function runTimingCheck(){
-  deviceCheckResult.textContent = "Running…";
+  deviceCheckResult.textContent = "Running...";
   setStatus("Timing check");
 
-  // simple rAF cadence check
   const samples = [];
   let last = performance.now();
   for (let i = 0; i < 60; i++){
@@ -374,7 +265,17 @@ async function runTimingCheck(){
   setStatus("Ready");
 }
 
+function getSelectedMode(){
+  const el = document.querySelector('input[name="mode"]:checked');
+  return el ? el.value : "standard";
+}
+
 function startAssessment(){
+  if (!itembank){
+    alert("Item bank not loaded yet.");
+    return;
+  }
+
   const mode = getSelectedMode();
   const ageYears = Number(ageInput.value || 25);
 
@@ -388,7 +289,6 @@ function startAssessment(){
   const groupB = (groupBInput?.value ?? "").trim();
   const groupC = (groupCInput?.value ?? "").trim();
 
-  // Create session
   activeSessionId = sessions.createSession({
     mode,
     ageYears,
@@ -404,9 +304,8 @@ function startAssessment(){
     deviceType: (window.matchMedia("(max-width: 820px)").matches ? "mobile" : "desktop")
   });
 
-  // Deterministic offline form assignment
   const seed = participantId || activeSessionId;
-  const fm = new FormManager(_formsMetaRef);
+  const fm = new FormManager(formsMeta);
   const formId = fm.assignForm(seed) ?? "A";
   const sess = sessions.get(activeSessionId);
   if (sess){ sess.meta.formId = formId; }
@@ -428,15 +327,14 @@ function startAssessment(){
   controller.start();
 }
 
-function updateFormInfo(){
-  const formAssign = getSelectedFormAssign();
-  formInfo.textContent = (formAssign === "auto")
-    ? "Auto: assigns Form A/B/C deterministically by session (balanced across large samples)."
-    : `Forced: Form ${formAssign}. Anchors remain shared across all forms for equating.`;
+function exportReportAndSession(){
+  if (!controller?.finalReport) return;
+  safeJsonDownload("chc-cat-report.json", controller.finalReport);
+  if (activeSessionId){
+    const s = sessions.exportSession(activeSessionId);
+    safeJsonDownload(`chc-cat-session-${activeSessionId}.json`, s);
+  }
 }
-
-
-/* ----------------- Assessment Controller ----------------- */
 
 class AssessmentController{
   constructor({ itembank, estimator, exposure, ageYears, mode, sessions, sessionId, formId, formManager, exclusions }){
@@ -448,6 +346,8 @@ class AssessmentController{
     this.sessions = sessions;
     this.sessionId = sessionId;
     this.formId = formId;
+    this.formManager = formManager;
+    this.exclusions = exclusions;
 
     this.integrityMon = initIntegrityMonitors({ store: this.sessions, sessionId: this.sessionId });
     this.integrity = this.integrityMon.integrity;
@@ -465,9 +365,6 @@ class AssessmentController{
     this.startedMs = 0;
     this.timerHandle = null;
     this.finalReport = null;
-        this.integrity.flags.push({ type: "VISIBILITY_CHANGE", at: new Date().toISOString() });
-      }
-    };
   }
 
   start(){
@@ -477,12 +374,15 @@ class AssessmentController{
 
     showScreen("test");
     setStatus("Testing");
+    integrityNote.textContent = "";
+    this._startTimer();
     this._startDomain(this.domains[this.domainIndex]);
   }
 
   abort(reason){
     this._stopTimer();
     this.integrityMon?.stop?.();
+    this.sessions?.appendEvent(this.sessionId, { type: "ABORT", payload: { reason } });
     setStatus("Ready");
   }
 
@@ -493,6 +393,7 @@ class AssessmentController{
     }
 
     const config = makeCatConfig();
+    const excludedIds = Array.from(this.exclusions?.getExcludedIds?.() ?? []);
 
     for (const d of this.domains){
       const st = new CatSubtest({
@@ -502,7 +403,7 @@ class AssessmentController{
         exposureStore: this.exposure,
         config,
         allowedItemIds: this.formManager?.getAllowedItemIds(this.formId, d) ?? null,
-        excludedItemIds: Array.from(this.exclusions?.getExcludedIds?.() ?? []),
+        excludedItemIds: excludedIds,
         anchorItemIds: this.formManager?.getAnchorIds(this.formId, d) ?? [],
         anchorPolicy: {
           targetProp: config.anchorTargetProp?.[d] ?? 0.22,
@@ -510,7 +411,7 @@ class AssessmentController{
           maxAnchors: config.anchorMax?.[d] ?? 6,
           avoidFirstTwo: !!(config.anchorAvoidFirstTwo?.[d] ?? true)
         },
-        anchorMiniBlockN: config.anchorMiniBlockN?.[d] ?? 3
+        anchorMiniBlockN: config.anchorMiniBlockN?.[d] ?? 0
       });
       st.start();
       this.subtests[d] = st;
@@ -522,9 +423,6 @@ class AssessmentController{
     this.currentItem = null;
 
     this._renderNextItem();
-    this._startTimer();
-
-    integrityNote.textContent = "";
   }
 
   _renderNextItem(){
@@ -533,7 +431,6 @@ class AssessmentController{
     this.currentRenderer?.cleanup?.();
     itemArea.innerHTML = "";
 
-    // Pick next item (routing handled implicitly by theta=0 at start)
     const item = this.currentSubtest.pickNextItem();
     if (!item){
       this._finishDomain();
@@ -542,11 +439,11 @@ class AssessmentController{
 
     this.currentItem = item;
 
-    kickerDomain.textContent = `${item.domain} • ${domainLabel(item.domain)}`;
+    kickerDomain.textContent = `${item.domain} ? ${domainLabel(item.domain)}`;
     testTitle.textContent = familyLabel(item.domain, item.family);
 
     itemCount.textContent = String(this.currentSubtest.responses.length + 1);
-    semReadout.textContent = this.currentSubtest.responses.length ? this.currentSubtest.sem.toFixed(3) : "—";
+    semReadout.textContent = this.currentSubtest.responses.length ? this.currentSubtest.sem.toFixed(3) : "?";
 
     this.currentRenderer = renderItem({
       mount: itemArea,
@@ -558,16 +455,14 @@ class AssessmentController{
   }
 
   submit(){
-    const r = this.currentRenderer.getResponse();
+    const r = this.currentRenderer?.getResponse();
     if (!r) return;
 
-    // Integrity: rapid guessing (MC items only)
     if (!["n_back_block","symbol_search_block","coding_block"].includes(this.currentItem.stem.type)){
       this.integrityMon.addRapidGuess(r.rtMs);
       if ((this.integrity.rapidGuessingCount ?? 0) >= 3){
         integrityNote.textContent = "Integrity note: rapid responding detected. Scores may be less interpretable.";
       }
-    }
     }
 
     const est = this.currentSubtest.recordResponse({
@@ -577,14 +472,15 @@ class AssessmentController{
       meta: r.meta
     });
 
-    // Log item-level event for calibration/norming
+    const anchorFlag = this.currentSubtest.isAnchor(this.currentItem.id);
+
     this.sessions?.appendEvent(this.sessionId, {
       type: "ITEM_RESPONSE",
       payload: {
         domain: this.currentItem.domain,
         family: this.currentItem.family,
         itemId: this.currentItem.id,
-        anchor: (this.null?.getAnchorIds(this.formId, this.currentItem.domain) ?? []).includes(this.currentItem.id),
+        anchor: anchorFlag,
         model: this.currentItem.model,
         a: this.currentItem.a,
         b: this.currentItem.b,
@@ -599,7 +495,6 @@ class AssessmentController{
 
     semReadout.textContent = this.currentSubtest.sem.toFixed(3);
 
-    // Stop rule
     if (this.currentSubtest.shouldStop()){
       this._finishDomain();
       return;
@@ -618,7 +513,6 @@ class AssessmentController{
       return;
     }
 
-    // brief transition
     this._flashDomainComplete(this.domains[this.domainIndex - 1], () => {
       this._startDomain(this.domains[this.domainIndex]);
     });
@@ -635,15 +529,12 @@ class AssessmentController{
     this.finalReport = buildReport({
       ageYears: this.ageYears,
       subtestSummaries: summaries,
-      integrity
+      integrity: this.integrity
     });
 
-    // Store report into session (fieldtest may still store report, but UI hides it)
     this.sessions?.appendEvent(this.sessionId, { type: "FINAL_REPORT", payload: this.finalReport });
     this.sessions?.markCompleted(this.sessionId);
     updateSessionInfo();
-  updateFormInfo();
-  document.querySelectorAll('input[name="formAssign"]').forEach(el => el.addEventListener('change', updateFormInfo));
 
     if (this.mode === "fieldtest"){
       showScreen("report");
@@ -692,7 +583,7 @@ class AssessmentController{
     const st = this.subtests[domain];
     box.innerHTML = `
       <strong>${domain} complete</strong>
-      <p class="muted">Items: ${st.responses.length} • θ = ${st.theta.toFixed(3)} • SEM = ${st.sem.toFixed(3)}</p>
+      <p class="muted">Items: ${st.responses.length} ? ? = ${st.theta.toFixed(3)} ? SEM = ${st.sem.toFixed(3)}</p>
       <div class="actions">
         <button class="btn primary" id="btnContinue">Continue</button>
       </div>
@@ -718,8 +609,6 @@ class AssessmentController{
   }
 }
 
-/* ----------------- Report Rendering ----------------- */
-
 function renderReport(report){
   const r = report.results;
 
@@ -731,7 +620,7 @@ function renderReport(report){
         <td><strong>${d}</strong> <span class="muted small">${domainLabel(d)}</span></td>
         <td>${idx.toFixed(1)}</td>
         <td>${p.toFixed(1)}%</td>
-        <td>${ci.lo.toFixed(1)} – ${ci.hi.toFixed(1)}</td>
+        <td>${ci.lo.toFixed(1)} ? ${ci.hi.toFixed(1)}</td>
       </tr>
     `;
   }).join("");
@@ -743,17 +632,17 @@ function renderReport(report){
       <div class="callout">
         <div class="muted small">Full Scale (demo)</div>
         <div style="font-size:44px;font-weight:900;margin-top:4px">${r.fsiq.toFixed(1)}</div>
-        <div class="muted">Percentile: ${r.fsiqPercentile.toFixed(1)}% • 95% CI: ${r.fsiqCI95.lo.toFixed(1)} – ${r.fsiqCI95.hi.toFixed(1)}</div>
+        <div class="muted">Percentile: ${r.fsiqPercentile.toFixed(1)}% ? 95% CI: ${r.fsiqCI95.lo.toFixed(1)} ? ${r.fsiqCI95.hi.toFixed(1)}</div>
         <div class="divider"></div>
         <div class="muted small">Interpretability</div>
         <div style="margin-top:8px">${badge}</div>
-        <div class="muted small" style="margin-top:10px">${escapeHtml(report.integrity.note)}</div>
+        <div class="muted small" style="margin-top:10px">${escapeHtml(report.integrity.note ?? "")}</div>
       </div>
 
       <div class="callout">
         <div class="muted small">Session</div>
         <div style="margin-top:8px">
-          <div class="badge">Age: ${report.meta.ageYears ?? "—"}</div>
+          <div class="badge">Age: ${report.meta.ageYears ?? "-"}</div>
           <div class="badge">Generated: ${escapeHtml(report.meta.generatedAt)}</div>
         </div>
         <div class="divider"></div>
@@ -783,10 +672,10 @@ function renderReport(report){
     <div class="callout">
       <strong>Next steps to make this defensible</strong>
       <ul class="bullets">
-        <li>Expand item banks (≥250–400+ per domain) and run full IRT calibration.</li>
-        <li>Collect large-scale norms (N ≥ 50,000) with stratified sampling and continuous norming.</li>
+        <li>Expand item banks (~250?400+ per domain) and run full IRT calibration.</li>
+        <li>Collect large-scale norms (N ? 50,000) with stratified sampling and continuous norming.</li>
         <li>Run DIF analyses across language/device/SES proxies and remove biased items.</li>
-        <li>Validate against external criteria (e.g., proctored nonverbal reasoning batteries) and assess test–retest reliability.</li>
+        <li>Validate against external criteria and assess test?retest reliability.</li>
       </ul>
     </div>
   `;
@@ -815,32 +704,11 @@ function integrityBadge(integrity){
   return `<span class="badge warn">Moderate</span>`;
 }
 
-function integrityInterpretation(integrity){
-  const flags = integrity.flags ?? [];
-  const v = integrity.visibilityChanges ?? 0;
-  const rg = integrity.rapidGuessingCount ?? 0;
-
-  if (!flags.length){
-    return "No integrity warnings were detected. Results are still estimates and require validated norms to interpret.";
-  }
-
-  const parts = [];
-  if (v > 0){
-    parts.push(`Tab/app switches detected (${v}). Backgrounding can disrupt timing and attention.`);
-  }
-  if (rg > 0){
-    parts.push(`Rapid responding detected (${rg}). This pattern can reduce measurement precision and inflate error.`);
-  }
-  return parts.join(" ");
-}
-
-/* ----------------- Labels & config ----------------- */
-
 function domainLabel(d){
   const map = {
     "Gf": "Fluid Reasoning",
     "Gc": "Crystallized (Controlled Verbal) Reasoning",
-    "Gv": "Visual–Spatial Processing",
+    "Gv": "Visual-Spatial Processing",
     "Gq": "Quantitative Reasoning",
     "Gwm": "Working Memory",
     "Gs": "Processing Speed"
@@ -875,12 +743,11 @@ function familyLabel(domain, family){
       "coding_block": "Coding Speed Block"
     }
   };
-  return map[domain]?.[family] ?? `${domain} • ${family}`;
+  return map[domain]?.[family] ?? `${domain} ? ${family}`;
 }
 
-function makeCatConfig(){(){
+function makeCatConfig(){
   return {
-    // stop rules by domain (demo defaults)
     semThreshold: {
       "Gf": 0.30,
       "Gv": 0.30,
@@ -891,20 +758,13 @@ function makeCatConfig(){(){
     },
     minItems: { "Gf": 10, "Gv": 10, "Gq": 10, "Gc": 10, "Gwm": 8, "Gs": 8 },
     maxItems: { "Gf": 18, "Gv": 18, "Gq": 18, "Gc": 18, "Gwm": 12, "Gs": 12 },
-
-    // exposure
-    maxExposurePerItem: 50, // local-only; for public deployments use server-side exposure policies
-
-    // item selection randomness
+    maxExposurePerItem: 50,
     topK: 5,
-
-    // content balancing (in this demo, each domain has one family; structure supports expansion)
     anchorMiniBlockN: { "Gf": 3, "Gv": 3, "Gq": 3, "Gc": 3, "Gwm": 2, "Gs": 2 },
     anchorTargetProp: { "Gf": 0.22, "Gv": 0.22, "Gq": 0.22, "Gc": 0.22, "Gwm": 0.18, "Gs": 0.18 },
     anchorMin: { "Gf": 2, "Gv": 2, "Gq": 2, "Gc": 2, "Gwm": 1, "Gs": 1 },
     anchorMax: { "Gf": 6, "Gv": 6, "Gq": 6, "Gc": 6, "Gwm": 4, "Gs": 4 },
     anchorAvoidFirstTwo: { "Gf": true, "Gv": true, "Gq": true, "Gc": true, "Gwm": false, "Gs": false },
-
     familyTargets: {
       "Gf": { "matrix_reasoning": 0.55, "series_completion": 0.45 },
       "Gv": { "mental_rotation": 0.60, "mirror_discrimination": 0.40 },
@@ -917,14 +777,13 @@ function makeCatConfig(){(){
 }
 
 function escapeHtml(s){
-  return String(s)
+  return String(s ?? "")
     .replaceAll("&","&amp;")
     .replaceAll("<","&lt;")
     .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
+    .replaceAll('"','&quot;')
     .replaceAll("'","&#039;");
 }
-
 
 function renderDifExplorer(){
   const state = sessions.exportAll();
@@ -935,7 +794,6 @@ function renderDifExplorer(){
     return;
   }
 
-  // Build long rows with a simple score proxy per domain = sum(x) within domain for that person/session
   const rows = [];
   for (const s of sess){
     const meta = s.meta ?? {};
@@ -963,13 +821,12 @@ function renderDifExplorer(){
     }
   }
 
-  // UI: choose grouping variable + levels
   const groups = inferGroupLevels(sess);
   reportArea.innerHTML = `
     <div class="callout">
       <strong>DIF explorer (MH screening)</strong>
       <p class="muted">
-        Computes Mantel–Haenszel DIF deltas within each domain using local completed sessions. This is a screening tool only.
+        Computes Mantel?Haenszel DIF deltas within each domain using local completed sessions. This is a screening tool only.
       </p>
       <div class="divider"></div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
@@ -1045,15 +902,15 @@ function renderDifExplorer(){
 
     const top = res.items.slice(0, 30);
     out.innerHTML = `
-      <div class="muted small">${escapeHtml(res.note)} • N(ref)≈${top[0]?.nRef ?? 0} • N(focal)≈${top[0]?.nFocal ?? 0}</div>
+      <div class="muted small">${escapeHtml(res.note)} ? N(ref)=${top[0]?.nRef ?? 0} ? N(focal)=${top[0]?.nFocal ?? 0}</div>
       <div class="divider"></div>
       <div style="overflow:auto">
         <table class="table">
           <thead>
             <tr>
               <th>Item</th>
-              <th>ΔMH</th>
-              <th>αMH</th>
+              <th>?MH</th>
+              <th>?MH</th>
               <th>Flag</th>
               <th>Ref N</th>
               <th>Focal N</th>
@@ -1106,13 +963,4 @@ function inferGroupLevels(sessionsList){
     groupB: [...levels.groupB].sort(),
     groupC: [...levels.groupC].sort()
   };
-}
-
-function escapeHtml(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
 }
