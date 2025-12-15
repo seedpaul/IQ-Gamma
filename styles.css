@@ -391,6 +391,28 @@ input, .input{
   font-weight:700;
   font-size: 16px;
 }
+.consentCard{
+  margin-top: 12px;
+  border: 1px solid rgba(251,191,36,.35);
+  background: rgba(251,191,36,.08);
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+.consentLabel{
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  cursor:pointer;
+}
+.consentLabel input{
+  margin-top: 4px;
+  accent-color: var(--accent);
+}
+.consentCopy{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
 .toolRow{
   display:flex;
   flex-wrap:wrap;

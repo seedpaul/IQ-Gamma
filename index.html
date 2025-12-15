@@ -124,15 +124,17 @@
               </label>
             </div>
 
-            <label class="badge consentBadge">
-              <input type="checkbox" id="consentCheck">
-              <span>
-                <strong>Consent (required for Field-test/Norming)</strong><br>
-                <span class="muted small">
-                  The app will record anonymized responses, timings, and basic device metadata locally in your browser and allow export. Do not enter identifying info.
-                </span>
-              </span>
-            </label>
+            <div class="consentCard">
+              <label class="consentLabel">
+                <input type="checkbox" id="consentCheck">
+                <div class="consentCopy">
+                  <div class="modeTitle">Consent required for Field-test / Norming</div>
+                  <div class="muted small">
+                    Local logging of anonymized responses, timings, and device metadata will occur to enable calibration exports. Do not enter identifying info.
+                  </div>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div class="actions">
