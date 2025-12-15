@@ -189,6 +189,9 @@ p{ line-height:1.45; }
   flex-direction:column;
   gap:14px;
 }
+.fullSpan{
+  grid-column: 1 / -1;
+}
 .sectionCard{
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 16px;
