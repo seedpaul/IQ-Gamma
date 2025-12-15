@@ -15,6 +15,7 @@ import { initIntegrityMonitors } from "./js/research/integrity.js";
 import { downloadJson, downloadJsonl } from "./js/research/export.js";
 
 const screens = {
+  intro: document.getElementById("screenIntro"),
   welcome: document.getElementById("screenWelcome"),
   practice: document.getElementById("screenPractice"),
   test: document.getElementById("screenTest"),
@@ -26,6 +27,7 @@ const ageInput = document.getElementById("ageInput");
 const btnDeviceCheck = document.getElementById("btnDeviceCheck");
 const deviceCheckResult = document.getElementById("deviceCheckResult");
 
+const btnIntroStart = document.getElementById("btnIntroStart");
 const btnStart = document.getElementById("btnStart");
 const btnPractice = document.getElementById("btnPractice");
 const btnPracticeBack = document.getElementById("btnPracticeBack");
@@ -86,10 +88,11 @@ async function boot(){
 
   wireUi();
   updateSessionInfo();
-  showWelcome();
+  showIntro();
 }
 
 function wireUi(){
+  btnIntroStart?.addEventListener("click", showWelcome);
   btnDeviceCheck.addEventListener("click", runTimingCheck);
   btnPractice.addEventListener("click", showPractice);
   btnPracticeBack.addEventListener("click", showWelcome);
@@ -151,6 +154,11 @@ function setStatus(text){
 function showScreen(name){
   Object.values(screens).forEach(s => s.classList.add("hidden"));
   screens[name]?.classList.remove("hidden");
+}
+
+function showIntro(){
+  showScreen("intro");
+  setStatus("Welcome");
 }
 
 function showWelcome(){
