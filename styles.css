@@ -98,6 +98,26 @@ p{ line-height:1.45; }
   gap:10px;
 }
 .sectionHeading small{ color:var(--muted); }
+.welcomeGrid{
+  display:grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 16px;
+}
+@media (max-width: 900px){
+  .welcomeGrid{ grid-template-columns: 1fr; }
+}
+.stack{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.sectionCard{
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 12px 12px;
+  background: rgba(255,255,255,.02);
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
 
 .formRow{
   display:flex;
@@ -270,6 +290,12 @@ input, .input{
 .badge.good{ border-color: rgba(52,211,153,.22); background: rgba(52,211,153,.08); }
 .badge.warn{ border-color: rgba(251,191,36,.22); background: rgba(251,191,36,.08); }
 .badge.bad{ border-color: rgba(251,113,133,.22); background: rgba(251,113,133,.08); }
+.consentBadge{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  margin-top:12px;
+}
 
 .footer{
   margin: 30px auto 50px;
@@ -332,6 +358,7 @@ input, .input{
   gap:10px;
   align-items:center;
 }
+.toolRow span{ white-space: nowrap; }
 .table{
   width: 100%;
   border-collapse: collapse;
