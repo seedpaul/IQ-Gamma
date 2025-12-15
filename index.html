@@ -71,21 +71,59 @@
 
           <div class="sectionCard">
             <h2>Mode</h2>
-            <div class="grid2">
-              <div class="callout">
-                <strong>Standard assessment</strong>
-                <p class="muted small">Shows scores using demo transforms (not calibrated norms).</p>
-              </div>
-              <div class="callout">
-                <strong>Field-test / Norming</strong>
-                <p class="muted small">Logs responses + timing for calibration; export datasets. Field-test can hide scores.</p>
-              </div>
+            <div class="modeGrid">
+              <label class="modeCard">
+                <input type="radio" name="mode" value="standard" checked>
+                <div class="modeContent">
+                  <div class="modeTop">
+                    <div>
+                      <div class="modeTitle">Standard</div>
+                      <div class="muted small">Scores shown (demo norms); local logging only.</div>
+                    </div>
+                  </div>
+                  <ul class="bullets small">
+                    <li>Adaptive per domain with SEM stops.</li>
+                    <li>Integrity signals captured (focus/visibility).</li>
+                    <li>Best for practice or small pilots.</li>
+                  </ul>
+                </div>
+              </label>
+
+              <label class="modeCard">
+                <input type="radio" name="mode" value="fieldtest">
+                <div class="modeContent">
+                  <div class="modeTop">
+                    <div>
+                      <div class="modeTitle">Field-test</div>
+                      <div class="muted small">Scores hidden; full response + timing export.</div>
+                    </div>
+                  </div>
+                  <ul class="bullets small">
+                    <li>Anchor-balanced routing for equating.</li>
+                    <li>Exports JSON/JSONL/CSV + IRT package.</li>
+                    <li>Use for calibration pilots.</li>
+                  </ul>
+                </div>
+              </label>
+
+              <label class="modeCard">
+                <input type="radio" name="mode" value="norming">
+                <div class="modeContent">
+                  <div class="modeTop">
+                    <div>
+                      <div class="modeTitle">Norming</div>
+                      <div class="muted small">Scores shown (demo norms) + full exports.</div>
+                    </div>
+                  </div>
+                  <ul class="bullets small">
+                    <li>Collects metadata for DIF/equating.</li>
+                    <li>Same routing/exposure as field-test.</li>
+                    <li>Use only with informed consent.</li>
+                  </ul>
+                </div>
+              </label>
             </div>
-            <div class="modeBadges">
-              <label class="badge"><input type="radio" name="mode" value="standard" checked> Standard</label>
-              <label class="badge"><input type="radio" name="mode" value="fieldtest"> Field-test (no scores)</label>
-              <label class="badge"><input type="radio" name="mode" value="norming"> Norming (scores + export)</label>
-            </div>
+
             <label class="badge consentBadge">
               <input type="checkbox" id="consentCheck">
               <span>

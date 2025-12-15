@@ -352,6 +352,45 @@ input, .input{
   gap:10px;
   margin-top:12px;
 }
+.modeGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+.modeCard{
+  display:block;
+  position:relative;
+  border-radius: 16px;
+  cursor:pointer;
+}
+.modeCard input{
+  position:absolute;
+  opacity:0;
+}
+.modeContent{
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 12px 12px;
+  background: rgba(255,255,255,.03);
+  display:flex;
+  flex-direction:column;
+  gap: 8px;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.modeCard input:checked + .modeContent{
+  border-color: rgba(96,165,250,.35);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.16);
+  background: rgba(96,165,250,.05);
+}
+.modeTop{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.modeTitle{
+  font-weight:700;
+  font-size: 16px;
+}
 .toolRow{
   display:flex;
   flex-wrap:wrap;
