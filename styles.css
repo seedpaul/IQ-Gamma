@@ -102,6 +102,7 @@ p{ line-height:1.45; }
   display:grid;
   grid-template-columns: 1.1fr .9fr;
   gap: 16px;
+  margin-top: 16px;
 }
 @media (max-width: 900px){
   .welcomeGrid{ grid-template-columns: 1fr; }
