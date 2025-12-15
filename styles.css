@@ -452,7 +452,7 @@ input, .input{
   background: rgba(255,255,255,.03);
   display:flex;
   flex-direction:column;
-  gap: 8px;
+  gap: 6px;
   transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
 }
 .modeCard input:checked + .modeContent{
@@ -460,14 +460,14 @@ input, .input{
   box-shadow: 0 0 0 3px rgba(96,165,250,.16);
   background: rgba(96,165,250,.05);
 }
-.modeTop{
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
-}
 .modeTitle{
   font-weight:700;
   font-size: 16px;
+}
+.modeBadgesRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
 }
 .consentCard{
   margin-top: 12px;
