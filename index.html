@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CHC CAT IQ (Research Demo)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">CHC</div>
+      <div>
+        <div class="title">CHC Computer-Adaptive IQ Assessment</div>
+        <div class="subtitle">Client-side research-grade framework (non-diagnostic)</div>
+      </div>
+    </div>
+    <div class="status" id="statusPill">Ready</div>
+  </header>
+
+  <main class="container">
+    <section class="card" id="screenWelcome">
+      <h1>Before you start</h1>
+      <div class="callout warning">
+        <strong>Important disclaimer.</strong>
+        <p>
+          This is a <strong>non-clinical</strong>, client-side research/demo assessment. It is <strong>not</strong> WAIS, Stanford–Binet,
+          Raven, or any proprietary test, and it does not provide a medical/educational diagnosis.
+          Scores are estimates that require large-scale norming and validation to be interpretable.
+        </p>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <h2>Standardization requirements</h2>
+          <ul class="bullets">
+            <li>Quiet environment, no interruptions, one attempt.</li>
+            <li>No external aids, calculators, note-taking, or assistance.</li>
+            <li>Mobile is supported, but desktop is preferred for timing stability.</li>
+          </ul>
+        </div>
+        <div>
+          <h2>Privacy</h2>
+          <ul class="bullets">
+            <li>Runs fully in your browser.</li>
+            <li>Optional local storage is used for item exposure control and resuming.</li>
+            <li>No network calls are made by default.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>Participant info (for age-adjusted demo norms)</h2>
+      <div class="formRow">
+        <label for="ageInput">Age (years)</label>
+        <input id="ageInput" type="number" min="6" max="90" value="25" />
+      </div>
+
+      <div class="formRow">
+        <label for="deviceCheck">Device timing check</label>
+        <button class="btn secondary" id="btnDeviceCheck">Run quick timing check</button>
+        <span class="muted" id="deviceCheckResult">Not run.</span>
+      </div>
+
+
+      <div class="divider"></div>
+
+      <h2>Mode</h2>
+      <div class="grid2">
+        <div class="callout">
+          <strong>Standard assessment</strong>
+          <p class="muted small">Shows scores using demo transforms (not calibrated norms).</p>
+        </div>
+        <div class="callout">
+          <strong>Field-test / Norming</strong>
+          <p class="muted small">Logs responses + timing for calibration; export datasets. Field-test can hide scores.</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <label class="badge"><input type="radio" name="mode" value="standard" checked> Standard</label>
+        <label class="badge"><input type="radio" name="mode" value="fieldtest"> Field-test (no scores)</label>
+        <label class="badge"><input type="radio" name="mode" value="norming"> Norming (scores + export)</label>
+      </div>
+
+      <div class="divider"></div>
+
+      <label class="badge" style="display:flex;gap:10px;align-items:flex-start">
+        <input type="checkbox" id="consentCheck">
+        <span>
+          <strong>Consent (required for Field-test/Norming)</strong><br>
+          <span class="muted small">
+            The app will record anonymized responses, timings, and basic device metadata locally in your browser and allow export. Do not enter identifying info.
+          </span>
+        </span>
+      </label>
+
+      <div class="divider"></div>
+
+      <h2>Field-test metadata (optional, non-identifying)</h2>
+      <div class="grid2">
+        <div class="callout">
+          <label class="muted small">Participant ID (anonymous code)</label>
+          <input id="participantId" class="input" placeholder="e.g., P000123 (no names/emails)" />
+        </div>
+        <div class="callout">
+          <label class="muted small">Group A (DIF; e.g., language)</label>
+          <input id="groupA" class="input" placeholder="e.g., EN, ES, FR" />
+        </div>
+        <div class="callout">
+          <label class="muted small">Group B (DIF; e.g., device)</label>
+          <input id="groupB" class="input" placeholder="e.g., mobile, desktop" />
+        </div>
+        <div class="callout">
+          <label class="muted small">Group C (optional)</label>
+          <input id="groupC" class="input" placeholder="e.g., region band" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <h2>Research tools (local)</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn secondary" id="btnFullscreen">Enter fullscreen</button>
+        <button class="btn secondary" id="btnExportSessions">Export sessions</button>
+        <button class="btn secondary" id="btnExportLongCsv">Export long CSV</button>
+        <button class="btn secondary" id="btnExportIrtPackage">Export IRT package</button>
+        <button class="btn secondary" id="btnDifExplorer">DIF explorer</button>
+        <button class="btn secondary" id="btnClearSessions">Clear sessions</button>
+      </div>
+
+      <div class="muted small" id="sessionInfo" style="margin-top:10px"></div>
+
+
+      <div class="divider"></div>
+
+      <div class="actions">
+        <button class="btn secondary" id="btnPractice">Practice</button>
+        <button class="btn primary" id="btnStart">Start Assessment</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="screenPractice">
+      <h1>Practice</h1>
+      <p class="muted">
+        Practice items are not scored. They teach the interaction style and timing rules.
+      </p>
+
+      <div id="practiceArea"></div>
+
+      <div class="actions">
+        <button class="btn secondary" id="btnPracticeBack">Back</button>
+        <button class="btn primary" id="btnPracticeDone">Continue</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="screenTest">
+      <div class="testHeader">
+        <div>
+          <div class="kicker" id="kickerDomain">Domain</div>
+          <h1 id="testTitle">Item</h1>
+        </div>
+        <div class="testMeta">
+          <div class="pill">Item <span id="itemCount">0</span></div>
+          <div class="pill">SEM <span id="semReadout">—</span></div>
+          <div class="pill">Time <span id="timeReadout">0.0s</span></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div id="itemArea"></div>
+
+      <div class="actions">
+        <button class="btn secondary" id="btnQuit">Quit</button>
+        <button class="btn primary" id="btnSubmit" disabled>Submit</button>
+      </div>
+
+      <div class="muted small" id="integrityNote"></div>
+    </section>
+
+    <section class="card hidden" id="screenReport">
+      <h1>Report</h1>
+
+      <div class="callout info">
+        <strong>Interpretation caution.</strong>
+        <p>
+          This report uses a <strong>demo</strong> norming transform (standard normal mapping with
+          light age adjustments) unless you replace it with your own <em>empirically collected</em> norms.
+          Do not treat these numbers as clinically valid.
+        </p>
+      </div>
+
+      <div id="reportArea"></div>
+
+      <div class="actions">
+        <button class="btn secondary" id="btnRestart">Restart</button>
+        <button class="btn primary" id="btnExport">Export JSON</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>CHC CAT IQ Demo • Client-side • No network calls</span>
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
