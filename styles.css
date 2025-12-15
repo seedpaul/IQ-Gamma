@@ -192,6 +192,16 @@ p{ line-height:1.45; }
 .fullSpan{
   grid-column: 1 / -1;
 }
+.infoRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:stretch;
+}
+.flexGrow{ flex:1 1 320px; }
+.actionsCard{
+  align-items:flex-end;
+}
 .sectionCard{
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 16px;
