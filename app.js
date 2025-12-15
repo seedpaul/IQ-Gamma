@@ -56,6 +56,9 @@ const btnDifExplorer = document.getElementById("btnDifExplorer");
 const btnExportIrtPackage = document.getElementById("btnExportIrtPackage");
 const consentCheck = document.getElementById("consentCheck");
 const sessionInfo = document.getElementById("sessionInfo");
+const btnMenu = document.getElementById("btnMenu");
+const btnMenuClose = document.getElementById("btnMenuClose");
+const menuPanel = document.getElementById("menuPanel");
 
 const participantIdInput = document.getElementById("participantId");
 const groupAInput = document.getElementById("groupA");
@@ -145,6 +148,8 @@ function wireUi(){
     exclusions.clear?.();
     updateSessionInfo();
   });
+  btnMenu?.addEventListener("click", () => menuPanel?.classList.toggle("hidden"));
+  btnMenuClose?.addEventListener("click", () => menuPanel?.classList.add("hidden"));
 }
 
 function setStatus(text){
