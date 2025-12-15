@@ -92,22 +92,39 @@ p{ line-height:1.45; }
   background: rgba(255,255,255,.08);
   margin: 14px 0;
 }
+.sectionHeading{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.sectionHeading small{ color:var(--muted); }
 
 .formRow{
   display:flex;
   align-items:center;
   gap: 10px;
   margin: 10px 0;
+  flex-wrap: wrap;
 }
-label{ width: 200px; color: #d1d5db; }
-input{
-  width: 160px;
+label{ color: #d1d5db; }
+input, .input{
+  width: 100%;
   background: rgba(0,0,0,.25);
   color: var(--text);
   border: 1px solid rgba(255,255,255,.10);
   border-radius: 12px;
   padding: 10px 12px;
   outline: none;
+}
+.fieldStack{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.metaGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
 }
 
 .actions{
@@ -241,10 +258,12 @@ input{
   background: rgba(255,255,255,.05);
 }
 .badge{
-  display:inline-block;
-  padding: 4px 8px;
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 8px 12px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.06);
 }
@@ -253,13 +272,10 @@ input{
 .badge.bad{ border-color: rgba(251,113,133,.22); background: rgba(251,113,133,.08); }
 
 .footer{
-  position:fixed; bottom:0; left:0; right:0;
-  padding: 10px 14px;
+  margin: 30px auto 50px;
+  text-align:center;
   color: var(--muted);
   font-size: 12px;
-  border-top: 1px solid rgba(255,255,255,.06);
-  background: rgba(10,14,24,.72);
-  backdrop-filter: blur(10px);
 }
 
 
@@ -303,6 +319,18 @@ input{
 }
 .input:focus{
   border-color: rgba(96,165,250,0.60);
+}
+.modeBadges{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:12px;
+}
+.toolRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
 }
 .table{
   width: 100%;
