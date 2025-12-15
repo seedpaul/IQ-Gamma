@@ -148,7 +148,7 @@ p{ line-height:1.45; }
 .sectionHeading small{ color:var(--muted); }
 .welcomeGrid{
   display:grid;
-  grid-template-columns: 1.1fr .9fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-top: 16px;
 }

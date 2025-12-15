@@ -123,6 +123,29 @@
           </div>
         </div>
 
+        <div class="grid2">
+          <div class="sectionCard">
+            <h2>Participant info (for age-adjusted demo norms)</h2>
+            <div class="metaGrid">
+              <div class="fieldStack">
+                <label for="ageInput">Age (years)</label>
+                <input id="ageInput" class="input" type="number" min="6" max="90" value="25" />
+              </div>
+              <div class="fieldStack">
+                <label for="deviceCheck">Device timing check</label>
+                <div class="toolRow">
+                  <button class="btn secondary" id="btnDeviceCheck">Run quick timing check</button>
+                  <span class="muted" id="deviceCheckResult">Not run.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="actions actionsCard">
+            <button class="btn secondary" id="btnPractice">Practice</button>
+            <button class="btn primary" id="btnStart">Start Assessment</button>
+          </div>
+        </div>
+
         <div class="stack fullSpan">
           <div class="sectionCard">
             <h2>Mode</h2>
@@ -174,29 +197,6 @@
                 </div>
               </label>
             </div>
-          </div>
-        </div>
-
-        <div class="infoRow">
-          <div class="sectionCard flexGrow">
-            <h2>Participant info (for age-adjusted demo norms)</h2>
-            <div class="metaGrid">
-              <div class="fieldStack">
-                <label for="ageInput">Age (years)</label>
-                <input id="ageInput" class="input" type="number" min="6" max="90" value="25" />
-              </div>
-              <div class="fieldStack">
-                <label for="deviceCheck">Device timing check</label>
-                <div class="toolRow">
-                  <button class="btn secondary" id="btnDeviceCheck">Run quick timing check</button>
-                  <span class="muted" id="deviceCheckResult">Not run.</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="actions actionsCard">
-            <button class="btn secondary" id="btnPractice">Practice</button>
-            <button class="btn primary" id="btnStart">Start Assessment</button>
           </div>
         </div>
       </div>
