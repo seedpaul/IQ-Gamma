@@ -1,4 +1,4 @@
-# CHC CAT IQ (Client-side Demo Framework)
+# IQ-Gamma (Client-side Demo Framework)
 
 This project is a **client-side**, **GitHub Pages–compatible** JavaScript application implementing a **multi-domain CHC CAT** framework. v0.2 expands the item bank and adds additional item families/blocks, but remains non-clinical without real calibration + norms:
 
